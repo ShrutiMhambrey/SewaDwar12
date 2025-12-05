@@ -28,6 +28,7 @@ app.use('/api', officerRoute);
 
 const servicesRoute = require("./routes/services");
 
+app.use("/api/department", require("./routes/departmentRoutes"));
 app.use("/api/services", servicesRoute);
 
 

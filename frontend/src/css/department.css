@@ -2,30 +2,35 @@
 /* FULL PAGE WRAPPER */
 .page-scroll {
   width: 100%;
-  height: calc(100vh - 60px); /* adjust under topbar */
+  min-height: calc(100vh - 60px);
   overflow-y: auto;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: center;   /* Only horizontal center */
+  align-items: flex-start;   /* Do NOT vertical center */
   background: #f5f7fa;
-  padding: 30px 0;
+  padding: 40px 0;
 }
-
+.center-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;   /* Centers horizontally */
+}
 /* FIX CENTERING */
 .dept-page {
   width: 100%;
+  max-width: 900px;   /* Prevents full width stretching */
   display: flex;
   justify-content: center;
-  align-items: center;
 }
 
-
+/* Card itself */
 .dept-card {
-  width: 600px;          /* Increased width */
-  background: #ffffff;
-  padding: 35px;
+  width: 100%;
+  max-width: 780px;
+  background: white;
+  padding: 32px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
 }
 
 

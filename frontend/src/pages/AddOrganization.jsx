@@ -122,9 +122,8 @@ export default function AddOrganization() {
       body: JSON.stringify(payload),
     })
       .then((res) => res.json())
-      .then(() => navigate(-1));
+      .then(() => navigate("/admin/departments"));
   };
-
   return (
     <div className="org-page">
       <div className="org-card">

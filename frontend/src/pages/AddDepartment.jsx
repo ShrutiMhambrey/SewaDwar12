@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import "../css/department.css";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import axios from "axios";
+
+import { 
+  getOrganization, 
+  getStates, 
+  insertDepartments 
+} from "../services/api";
 
 export default function AddDepartment() {
   const navigate = useNavigate();
@@ -28,24 +35,26 @@ export default function AddDepartment() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [orgRes, stateRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/departments/organizations"),
-          axios.get("http://localhost:5000/api/master/states"),
+        const [{ data: orgData }, { data: stateData }] = await Promise.all([
+          getOrganization(),
+          getStates()
         ]);
-        setOrgList(orgRes.data || []);
-        setStateList(stateRes.data || []);
+
+        setOrgList(orgData || []);
+        setStateList(stateData || []);
       } catch (err) {
         console.error("Error fetching org/state data:", err);
-        alert("Failed to fetch organizations or states. Check backend.");
+        toast.error("Failed to load organization or state list");
       }
     };
+
     fetchData();
   }, []);
 
   // 🟢 Save Department locally
   const handleSaveDepartment = () => {
     if (!currentDept.department_name || !currentDept.organization_id || !currentDept.state_code) {
-      alert("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -70,10 +79,10 @@ export default function AddDepartment() {
     setActiveServiceIndex(null);
   };
 
-  // 🟢 Submit to backend
+  // 🟢 Submit to backend (API wrapper)
   const handleSubmit = async () => {
     if (departments.length === 0) {
-      alert("Add at least one department first.");
+      toast.error("Add at least one department first.");
       return;
     }
 
@@ -81,7 +90,7 @@ export default function AddDepartment() {
     const stateCode = departments[0].state_code;
 
     try {
-      const res = await axios.post("http://localhost:5000/api/departments/insert-departments", {
+      const res = await insertDepartments({
         organization_id: orgId,
         state_code: stateCode,
         departments: departments.map((d) => ({
@@ -95,14 +104,14 @@ export default function AddDepartment() {
       });
 
       if (res.data.success) {
-        alert(`✅ Departments and services added successfully!`);
-        navigate("/department-list");
+        toast.success("Departments and services added successfully!");
+        navigate("/admin/departments");
       } else {
-        alert("❌ Error: " + res.data.message);
+        toast.error("Error: " + res.data.message);
       }
     } catch (err) {
       console.error("Error submitting:", err);
-      alert("Server error while submitting departments");
+      toast.error("Server error while submitting departments");
     }
   };
 
@@ -139,6 +148,7 @@ export default function AddDepartment() {
 
   // 🧱 UI
   return (
+    <div className="center-wrapper">
     <div className="dept-wrapper">
       <div className="dept-card">
         <div className="dept-breadcrumb">Home › Add Entry › Department</div>
@@ -148,7 +158,11 @@ export default function AddDepartment() {
         {departments.length > 0 && (
           <table className="dept-table">
             <thead>
-              <tr><th>Department</th><th>Services</th><th>Action</th></tr>
+              <tr>
+                <th>Department</th>
+                <th>Services</th>
+                <th>Action</th>
+              </tr>
             </thead>
             <tbody>
               {departments.map((d, i) => (
@@ -238,7 +252,12 @@ export default function AddDepartment() {
           {currentDept.services.length === 0 && <p>No services added.</p>}
 
           <table className="dept-table">
-            <thead><tr><th>Service</th><th>Action</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Action</th>
+              </tr>
+            </thead>
             <tbody>
               {currentDept.services.map((srv, i) => (
                 <tr key={i}>
@@ -291,6 +310,7 @@ export default function AddDepartment() {
           </button>
         </div>
       </div>
+    </div>
     </div>
   );
 }

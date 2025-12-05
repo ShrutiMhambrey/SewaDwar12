@@ -70,3 +70,6 @@ export const getOfficersByLocation = (payload) =>
 
 export const insertServices = (data) =>
   safeRequest(api.post("/services/insert-multiple", data));
+
+export const insertDepartments = (payload) =>
+  safeRequest(api.post("/department/bulk", payload));
