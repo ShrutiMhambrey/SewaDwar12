@@ -13,55 +13,57 @@ CREATE TABLE m_state (
 );
 
 CREATE TABLE m_division (
-    division_code VARCHAR(3) NOT NULL PRIMARY KEY,
+    division_code VARCHAR(3) PRIMARY KEY,
     state_code VARCHAR(2) NOT NULL,
     division_name VARCHAR(255) NOT NULL,
     division_name_ll VARCHAR(255) NOT NULL,
-    FOREIGN KEY (state_code) REFERENCES m_state(state_code),
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     insert_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     insert_ip VARCHAR(50) NOT NULL DEFAULT 'NA',
     insert_by VARCHAR(100) NOT NULL DEFAULT 'NA',
     updated_date TIMESTAMP DEFAULT NULL,
     update_ip VARCHAR(50) DEFAULT NULL,
-    update_by VARCHAR(100) DEFAULT NULL
+    update_by VARCHAR(100) DEFAULT NULL,
+    FOREIGN KEY (state_code) REFERENCES m_state(state_code)
 );
 
+
 CREATE TABLE m_district (
-    district_code VARCHAR(3) NOT NULL PRIMARY KEY,
+    district_code VARCHAR(3) PRIMARY KEY,
     division_code VARCHAR(3) NOT NULL,
     state_code VARCHAR(2) NOT NULL,
     district_name VARCHAR(255) NOT NULL,
     district_name_ll VARCHAR(255) NOT NULL,
-    FOREIGN KEY (division_code) REFERENCES m_division(division_code),
-    FOREIGN KEY (state_code) REFERENCES m_state(state_code),
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     insert_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     insert_ip VARCHAR(50) NOT NULL DEFAULT 'NA',
     insert_by VARCHAR(100) NOT NULL DEFAULT 'NA',
     updated_date TIMESTAMP DEFAULT NULL,
     update_ip VARCHAR(50) DEFAULT NULL,
-    update_by VARCHAR(100) DEFAULT NULL
+    update_by VARCHAR(100) DEFAULT NULL,
+    FOREIGN KEY (division_code) REFERENCES m_division(division_code),
+    FOREIGN KEY (state_code) REFERENCES m_state(state_code)
 );
 
 CREATE TABLE m_taluka (
-    taluka_code VARCHAR(4) NOT NULL PRIMARY KEY,
-    district_code VARCHAR(5) NOT NULL,
-    division_code VARCHAR(5) NOT NULL,
+    taluka_code VARCHAR(4) PRIMARY KEY,
+    district_code VARCHAR(3) NOT NULL,
+    division_code VARCHAR(3) NOT NULL,
     state_code VARCHAR(2) NOT NULL,
     taluka_name VARCHAR(255) NOT NULL,
     taluka_name_ll VARCHAR(255) NOT NULL,
-    FOREIGN KEY (district_code) REFERENCES m_district(district_code),
-    FOREIGN KEY (division_code) REFERENCES m_division(division_code),
-    FOREIGN KEY (state_code) REFERENCES m_state(state_code),
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     insert_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     insert_ip VARCHAR(50) NOT NULL DEFAULT 'NA',
     insert_by VARCHAR(100) NOT NULL DEFAULT 'NA',
     updated_date TIMESTAMP DEFAULT NULL,
     update_ip VARCHAR(50) DEFAULT NULL,
-    update_by VARCHAR(100) DEFAULT NULL
+    update_by VARCHAR(100) DEFAULT NULL,
+    FOREIGN KEY (district_code) REFERENCES m_district(district_code),
+    FOREIGN KEY (division_code) REFERENCES m_division(division_code),
+    FOREIGN KEY (state_code) REFERENCES m_state(state_code)
 );
+
 
 INSERT INTO m_division (division_code, state_code, division_name, division_name_ll)
 VALUES 
@@ -77,53 +79,55 @@ CREATE TABLE m_organization (
     organization_id VARCHAR(10) PRIMARY KEY,
     organization_name VARCHAR(255) NOT NULL,
     organization_name_ll VARCHAR(255) NOT NULL,
-	state_code VARCHAR(10) NOT NULL,
-	FOREIGN KEY (state_code) REFERENCES m_state(state_code),
+    state_code VARCHAR(2) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     insert_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     insert_ip VARCHAR(50) NOT NULL DEFAULT 'NA',
     insert_by VARCHAR(100) NOT NULL DEFAULT 'NA',
     updated_date TIMESTAMP DEFAULT NULL,
     update_ip VARCHAR(50) DEFAULT NULL,
-    update_by VARCHAR(100) DEFAULT NULL
+    update_by VARCHAR(100) DEFAULT NULL,
+    FOREIGN KEY (state_code) REFERENCES m_state(state_code)
 );
+
 
 CREATE TABLE m_department (
     department_id VARCHAR(10) PRIMARY KEY,
-	organization_id VARCHAR(10) NOT NULL,
+    organization_id VARCHAR(10) NOT NULL,
     department_name VARCHAR(255) NOT NULL,
     department_name_ll VARCHAR(255) NOT NULL,
-	state_code VARCHAR(10) NOT NULL,
-	FOREIGN KEY (state_code) REFERENCES m_state(state_code),
-	FOREIGN KEY (organization_id) REFERENCES m_organization(organization_id),
+    state_code VARCHAR(2) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     insert_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     insert_ip VARCHAR(50) NOT NULL DEFAULT 'NA',
     insert_by VARCHAR(100) NOT NULL DEFAULT 'NA',
     updated_date TIMESTAMP DEFAULT NULL,
     update_ip VARCHAR(50) DEFAULT NULL,
-    update_by VARCHAR(100) DEFAULT NULL
+    update_by VARCHAR(100) DEFAULT NULL,
+    FOREIGN KEY (organization_id) REFERENCES m_organization(organization_id),
+    FOREIGN KEY (state_code) REFERENCES m_state(state_code)
 );
+
 
 CREATE TABLE m_services (
     service_id VARCHAR(10) PRIMARY KEY,
-	organization_id VARCHAR(10) NOT NULL,
-	department_id VARCHAR(10) NOT NULL,
+    organization_id VARCHAR(10) NOT NULL,
+    department_id VARCHAR(10) NOT NULL,
     service_name VARCHAR(255) NOT NULL,
     service_name_ll VARCHAR(255) NOT NULL,
-	state_code VARCHAR(10) NOT NULL,
-	FOREIGN KEY (state_code) REFERENCES m_state(state_code),
-	FOREIGN KEY (organization_id) REFERENCES m_organization(organization_id),
-	FOREIGN KEY (department_id) REFERENCES m_department(department_id),
+    state_code VARCHAR(2) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     insert_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     insert_ip VARCHAR(50) NOT NULL DEFAULT 'NA',
     insert_by VARCHAR(100) NOT NULL DEFAULT 'NA',
     updated_date TIMESTAMP DEFAULT NULL,
     update_ip VARCHAR(50) DEFAULT NULL,
-    update_by VARCHAR(100) DEFAULT NULL
+    update_by VARCHAR(100) DEFAULT NULL,
+    FOREIGN KEY (organization_id) REFERENCES m_organization(organization_id),
+    FOREIGN KEY (department_id) REFERENCES m_department(department_id),
+    FOREIGN KEY (state_code) REFERENCES m_state(state_code)
 );
-Select * from m_role
+
 -- ROLE/DESIGNATION
 CREATE TABLE m_role (
     role_code VARCHAR(2) PRIMARY KEY,
@@ -143,9 +147,9 @@ CREATE TABLE m_designation (
     designation_name VARCHAR(255) NOT NULL,
     designation_name_ll VARCHAR(255) NOT NULL,
     state_code VARCHAR(2) NOT NULL,
-    division_code VARCHAR(5) NOT NULL,
-    district_code VARCHAR(5) NOT NULL,
-    taluka_code VARCHAR(5) NOT NULL,
+    division_code VARCHAR(3) NOT NULL,
+    district_code VARCHAR(3) NOT NULL,
+    taluka_code VARCHAR(4) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     insert_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     insert_ip VARCHAR(50) NOT NULL DEFAULT 'NA',
@@ -160,10 +164,61 @@ CREATE TABLE m_designation (
 );
 
 --VISITOR/OFFICER/HELPDESK/ADMIN
-CREATE SEQUENCE m_users_user_id_seq START 1 INCREMENT 1;
+CREATE TABLE user_seq_monthly (
+    year_month VARCHAR(7) PRIMARY KEY,  -- Format YYYY-MM
+    seq_no INT NOT NULL
+);
 
+-- Function to generate user_id
+CREATE OR REPLACE FUNCTION generate_user_id()
+RETURNS TEXT AS $$
+DECLARE
+    ym VARCHAR(7);
+    mon TEXT;
+    yr TEXT;
+    seq INT;
+    formatted_seq TEXT;
+BEGIN
+    -- Current year-month
+    ym := TO_CHAR(NOW(), 'YYYY-MM');
+
+    -- Get existing sequence for this month
+    SELECT seq_no INTO seq
+    FROM user_seq_monthly
+    WHERE year_month = ym;
+
+    -- If no sequence exists, start from 1
+    IF NOT FOUND THEN
+        seq := 1;
+        INSERT INTO user_seq_monthly(year_month, seq_no) VALUES (ym, seq);
+    ELSE
+        seq := seq + 1;
+        UPDATE user_seq_monthly SET seq_no = seq WHERE year_month = ym;
+    END IF;
+
+    -- Format month name and year
+    mon := TO_CHAR(NOW(), 'MON');  -- JAN, FEB, MAR
+    yr := TO_CHAR(NOW(), 'YYYY');
+    formatted_seq := LPAD(seq::TEXT, 3, '0');
+
+    RETURN mon || '-' || yr || '-USR-' || formatted_seq;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger function
+CREATE OR REPLACE FUNCTION set_user_id()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.user_id IS NULL THEN
+        NEW.user_id := generate_user_id();
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create table
 CREATE TABLE m_users (
-    user_id VARCHAR(20) PRIMARY KEY DEFAULT ('USR' || LPAD(nextval('m_users_user_id_seq')::TEXT, 3, '0')),
+    user_id VARCHAR(30) PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role_code VARCHAR(2) NOT NULL REFERENCES m_role(role_code),
@@ -176,10 +231,58 @@ CREATE TABLE m_users (
     update_by VARCHAR(100) DEFAULT NULL
 );
 
-CREATE SEQUENCE m_visitors_signup_id_seq START 1 INCREMENT 1;
+-- Trigger
+CREATE TRIGGER trg_set_user_id
+BEFORE INSERT ON m_users
+FOR EACH ROW
+EXECUTE FUNCTION set_user_id();
+
+CREATE TABLE visitor_seq_monthly (
+    year_month VARCHAR(7) PRIMARY KEY,   -- Format: YYYY-MM
+    seq_no INT NOT NULL
+);
+
+CREATE OR REPLACE FUNCTION generate_visitor_id()
+RETURNS TEXT AS $$
+DECLARE
+    ym VARCHAR(7);
+    mon TEXT;
+    yr TEXT;
+    seq INT;
+    formatted_seq TEXT;
+BEGIN
+    -- Current year-month
+    ym := TO_CHAR(NOW(), 'YYYY-MM');
+
+    -- Get existing sequence for this month
+    SELECT seq_no INTO seq 
+    FROM visitor_seq_monthly 
+    WHERE year_month = ym
+	FOR UPDATE;
+
+    -- If no sequence exists, start from 1
+    IF NOT FOUND THEN
+        seq := 1;
+        INSERT INTO visitor_seq_monthly(year_month, seq_no) 
+        VALUES (ym, seq);
+    ELSE
+        seq := seq + 1;
+        UPDATE visitor_seq_monthly 
+        SET seq_no = seq 
+        WHERE year_month = ym;
+    END IF;
+
+    -- Format month name, year, and sequence
+    mon := TO_CHAR(NOW(), 'MON');     -- JAN, FEB, MAR
+    yr := TO_CHAR(NOW(), 'YYYY');     -- 2025
+    formatted_seq := LPAD(seq::TEXT, 3, '0');  -- 001, 002...
+
+    RETURN mon || '-' || yr || '-VIS-' || formatted_seq;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE TABLE m_visitors_signup (
-    visitor_id VARCHAR(20) PRIMARY KEY DEFAULT ('VIS' || LPAD(nextval('m_visitors_signup_id_seq')::TEXT, 3, '0')),
+    visitor_id VARCHAR(30) PRIMARY KEY,
     user_id VARCHAR(20) UNIQUE NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     gender CHAR(1) CHECK (gender IN ('M','F','O')),
@@ -187,9 +290,9 @@ CREATE TABLE m_visitors_signup (
     mobile_no VARCHAR(15) UNIQUE,
     email_id VARCHAR(255) UNIQUE,
     state_code VARCHAR(2),
-    division_code VARCHAR(5),
-    district_code VARCHAR(5),
-    taluka_code VARCHAR(5),
+    division_code VARCHAR(3),
+    district_code VARCHAR(3),
+    taluka_code VARCHAR(4),
     pincode VARCHAR(10),
     photo VARCHAR(500),
     is_active BOOLEAN DEFAULT TRUE,
@@ -199,12 +302,30 @@ CREATE TABLE m_visitors_signup (
     updated_date TIMESTAMP DEFAULT NULL,
     update_by VARCHAR(100),
     update_ip VARCHAR(50),
+    
     FOREIGN KEY (user_id) REFERENCES m_users(user_id),
     FOREIGN KEY (state_code) REFERENCES m_state(state_code),
     FOREIGN KEY (division_code) REFERENCES m_division(division_code),
     FOREIGN KEY (district_code) REFERENCES m_district(district_code),
     FOREIGN KEY (taluka_code) REFERENCES m_taluka(taluka_code)
 );
+
+CREATE OR REPLACE FUNCTION set_visitor_id()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.visitor_id IS NULL THEN
+        NEW.visitor_id := generate_visitor_id();
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_set_visitor_id
+BEFORE INSERT ON m_visitors_signup
+FOR EACH ROW
+EXECUTE FUNCTION set_visitor_id();
+
 
 CREATE SEQUENCE m_officers_id_seq START 1 INCREMENT 1;
 
@@ -218,9 +339,9 @@ CREATE TABLE m_officers (
     department_id VARCHAR(10),
     organization_id VARCHAR(10),
     state_code VARCHAR(2),
-    division_code VARCHAR(5),
-    district_code VARCHAR(5),
-    taluka_code VARCHAR(5),
+    division_code VARCHAR(3),
+    district_code VARCHAR(3),
+    taluka_code VARCHAR(4),
     availability_status VARCHAR(50) DEFAULT 'Available',
     photo VARCHAR(500),
     is_active BOOLEAN DEFAULT TRUE,
@@ -241,6 +362,7 @@ CREATE TABLE m_officers (
 );
 
 
+
 CREATE SEQUENCE m_helpdesk_id_seq START 1 INCREMENT 1;
 
 CREATE TABLE m_helpdesk (
@@ -249,8 +371,8 @@ CREATE TABLE m_helpdesk (
     full_name VARCHAR(255) NOT NULL,
     mobile_no VARCHAR(15) UNIQUE,
     email_id VARCHAR(255) UNIQUE,
-    assigned_department VARCHAR(5),
-    assigned_location VARCHAR(5),
+    assigned_department VARCHAR(10),
+    assigned_location VARCHAR(3),
     start_time TIME NOT NULL DEFAULT '09:00',
     end_time TIME NOT NULL DEFAULT '17:00',
     photo VARCHAR(500),
@@ -267,11 +389,6 @@ CREATE TABLE m_helpdesk (
     FOREIGN KEY (assigned_location) REFERENCES m_district(district_code)
 );
 
-ALTER TABLE m_helpdesk 
-ALTER COLUMN assigned_department TYPE VARCHAR(10);
-
-ALTER TABLE m_helpdesk 
-ALTER COLUMN assigned_location TYPE VARCHAR(10);
 
 CREATE SEQUENCE m_admins_id_seq START 1 INCREMENT 1;
 
@@ -292,26 +409,32 @@ CREATE TABLE m_admins (
     FOREIGN KEY (user_id) REFERENCES m_users(user_id)
 );
 
--- 
+----------------------------------------------------------
+
 CREATE SEQUENCE appointments_id_seq START 1 INCREMENT 1;
 
 CREATE TABLE appointments (
-    appointment_id VARCHAR(20) PRIMARY KEY DEFAULT ('APT' || LPAD(nextval('appointments_id_seq')::TEXT, 3, '0')),
+    appointment_id VARCHAR(20) PRIMARY KEY DEFAULT ('APT' || LPAD(nextval('appointments_id_seq')::TEXT, 5, '0')),
     visitor_id VARCHAR(20) NOT NULL,
     organization_id VARCHAR(10) NOT NULL,
     department_id VARCHAR(10) NOT NULL,
     officer_id VARCHAR(20) NOT NULL,
-    service_id VARCHAR(20) NOT NULL,purpose TEXT NOT NULL,
+    service_id VARCHAR(20) NOT NULL,
+    purpose TEXT NOT NULL,
     appointment_date DATE NOT NULL,
-    slot_time TIME NOT NULL,status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected','rescheduled','completed')),
-	reschedule_reason TEXT,
+    slot_time TIME NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending','approved','rejected','rescheduled','completed')),
+    reschedule_reason TEXT,
     qr_code_path VARCHAR(500),
-    is_active BOOLEAN DEFAULT TRUE,insert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    insert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     insert_by VARCHAR(100) DEFAULT 'system',
     insert_ip VARCHAR(50) DEFAULT 'NA',
     updated_date TIMESTAMP DEFAULT NULL,
     update_by VARCHAR(100),
     update_ip VARCHAR(50),
+
     FOREIGN KEY (visitor_id) REFERENCES m_visitors_signup(visitor_id),
     FOREIGN KEY (officer_id) REFERENCES m_officers(officer_id),
     FOREIGN KEY (organization_id) REFERENCES m_organization(organization_id),
@@ -319,16 +442,18 @@ CREATE TABLE appointments (
     FOREIGN KEY (service_id) REFERENCES m_services(service_id)
 );
 
+
 CREATE SEQUENCE appointment_documents_id_seq START 1 INCREMENT 1;
 
 CREATE TABLE appointment_documents (
-    document_id VARCHAR(20) PRIMARY KEY DEFAULT ('DOC' || LPAD(nextval('appointment_documents_id_seq')::TEXT, 3, '0')),
+    document_id VARCHAR(20) PRIMARY KEY DEFAULT ('DOC' || LPAD(nextval('appointment_documents_id_seq')::TEXT, 5, '0')),
     appointment_id VARCHAR(20) NOT NULL,
     doc_type VARCHAR(100) NOT NULL,
     file_path VARCHAR(500) NOT NULL,
     uploaded_by VARCHAR(20) NOT NULL,
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id),
+
+    FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id),
     FOREIGN KEY (uploaded_by) REFERENCES m_users(user_id)
 );
 
@@ -340,34 +465,38 @@ CREATE TABLE walkins (
     gender CHAR(1) CHECK (gender IN ('M','F','O')),
     mobile_no VARCHAR(15),
     email_id VARCHAR(255),
-	id_proof_type VARCHAR(100) DEFAULT NULL,      
-    id_proof_no VARCHAR(50) DEFAULT NULL,
-	organization_id VARCHAR(10) NOT NULL,                  
-    department_id VARCHAR(10) NOT NULL,                 
-    officer_id VARCHAR(20),                       
+    id_proof_type VARCHAR(100),
+    id_proof_no VARCHAR(50),
+    organization_id VARCHAR(10) NOT NULL,
+    department_id VARCHAR(10) NOT NULL,
+    officer_id VARCHAR(20),
     purpose VARCHAR(500) NOT NULL,
     walkin_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected','completed')),
-    remarks VARCHAR(500),insert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending','approved','rejected','completed')),
+    remarks VARCHAR(500),
+    insert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     insert_by VARCHAR(100) DEFAULT 'system',
     insert_ip VARCHAR(50) DEFAULT 'NA',
-	FOREIGN KEY (organization_id) REFERENCES m_organization(organization_id),
+
+    FOREIGN KEY (organization_id) REFERENCES m_organization(organization_id),
     FOREIGN KEY (department_id) REFERENCES m_department(department_id),
     FOREIGN KEY (officer_id) REFERENCES m_officers(officer_id)
 );
 
 CREATE SEQUENCE walkin_tokens_id_seq START 1 INCREMENT 1;
 
-
 CREATE TABLE walkin_tokens (
     token_id VARCHAR(20) PRIMARY KEY DEFAULT ('T' || LPAD(nextval('walkin_tokens_id_seq')::TEXT, 5, '0')),
-    walkin_id VARCHAR(20) NOT NULL,  
-    token_number VARCHAR(20) NOT NULL,             
+    walkin_id VARCHAR(20) NOT NULL,
+    token_number VARCHAR(20) NOT NULL,
     issue_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) DEFAULT 'waiting' CHECK (status IN ('waiting','in-progress','served','cancelled')),
+    status VARCHAR(20) DEFAULT 'waiting' 
+        CHECK (status IN ('waiting','in-progress','served','cancelled')),
     called_time TIMESTAMP DEFAULT NULL,
     completed_time TIMESTAMP DEFAULT NULL,
-	FOREIGN KEY (walkin_id) REFERENCES walkins(walkin_id)
+
+    FOREIGN KEY (walkin_id) REFERENCES walkins(walkin_id)
 );
 
 CREATE SEQUENCE checkins_id_seq START 1 INCREMENT 1;
@@ -375,17 +504,19 @@ CREATE SEQUENCE checkins_id_seq START 1 INCREMENT 1;
 CREATE TABLE checkins (
     checkin_id VARCHAR(20) PRIMARY KEY DEFAULT ('CHK' || LPAD(nextval('checkins_id_seq')::TEXT, 5, '0')),
     visitor_id VARCHAR(20) NOT NULL,
-    appointment_id VARCHAR(20), 
-    walkin_id VARCHAR(20),  
+    appointment_id VARCHAR(20),
+    walkin_id VARCHAR(20),
     checkin_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     checkout_time TIMESTAMP DEFAULT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'checked-in' CHECK (status IN ('checked-in','completed','cancelled')),
+    status VARCHAR(20) NOT NULL DEFAULT 'checked-in'
+        CHECK (status IN ('checked-in','completed','cancelled')),
     insert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     insert_by VARCHAR(100) DEFAULT 'system',
     insert_ip VARCHAR(50) DEFAULT 'NA',
     updated_date TIMESTAMP DEFAULT NULL,
     update_by VARCHAR(100),
     update_ip VARCHAR(50),
+
     FOREIGN KEY (visitor_id) REFERENCES m_visitors_signup(visitor_id),
     FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id),
     FOREIGN KEY (walkin_id) REFERENCES walkins(walkin_id)
@@ -399,14 +530,17 @@ CREATE TABLE queue (
     appointment_id VARCHAR(20),
     walkin_id VARCHAR(20),
     visitor_id VARCHAR(20) NOT NULL,
-    position VARCHAR(10) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'waiting' CHECK (status IN ('waiting','served','skipped')),
-	insert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    position INT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'waiting'
+        CHECK (status IN ('waiting','served','skipped')),
+    insert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     insert_by VARCHAR(100) DEFAULT 'system',
     insert_ip VARCHAR(50) DEFAULT 'NA',
     updated_date TIMESTAMP DEFAULT NULL,
     update_by VARCHAR(100),
-    update_ip VARCHAR(50),FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id),
+    update_ip VARCHAR(50),
+
+    FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id),
     FOREIGN KEY (walkin_id) REFERENCES walkins(walkin_id),
     FOREIGN KEY (visitor_id) REFERENCES m_visitors_signup(visitor_id)
 );
@@ -415,16 +549,20 @@ CREATE SEQUENCE feedback_id_seq START 1 INCREMENT 1;
 
 CREATE TABLE feedback (
     feedback_id VARCHAR(20) PRIMARY KEY DEFAULT ('FDB' || LPAD(nextval('feedback_id_seq')::TEXT, 5, '0')),
-	visitor_id VARCHAR(20) NOT NULL,
+    visitor_id VARCHAR(20) NOT NULL,
     appointment_id VARCHAR(20),
-    walkin_id VARCHAR(20),rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    walkin_id VARCHAR(20),
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
     comments TEXT,
-    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,insert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    insert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     insert_by VARCHAR(100) DEFAULT 'system',
     insert_ip VARCHAR(50) DEFAULT 'NA',
     updated_date TIMESTAMP DEFAULT NULL,
     update_by VARCHAR(100),
-    update_ip VARCHAR(50),FOREIGN KEY (visitor_id) REFERENCES m_visitors_signup(visitor_id),
+    update_ip VARCHAR(50),
+
+    FOREIGN KEY (visitor_id) REFERENCES m_visitors_signup(visitor_id),
     FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id),
     FOREIGN KEY (walkin_id) REFERENCES walkins(walkin_id)
 );
@@ -433,14 +571,16 @@ CREATE SEQUENCE notifications_id_seq START 1 INCREMENT 1;
 
 CREATE TABLE notifications (
     notification_id VARCHAR(20) PRIMARY KEY DEFAULT ('NOT' || LPAD(nextval('notifications_id_seq')::TEXT, 5, '0')),
-    username VARCHAR(20) NOT NULL,              -- VIS001 / OFF001 / HLP001 etc.
+    user_id VARCHAR(20) NOT NULL,            -- VIS001 / OFF001 / HLP001 etc.
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
-    type VARCHAR(50) DEFAULT 'info',            -- e.g. success, warning, info, error
+    type VARCHAR(50) DEFAULT 'info',         -- e.g. success, warning, info, error
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (username) REFERENCES m_users(username)
+
+    FOREIGN KEY (user_id) REFERENCES m_users(user_id)
 );
+
 
 ---Functions:
 CREATE OR REPLACE FUNCTION get_designations()
@@ -659,7 +799,6 @@ DECLARE
     notification_data JSON;
     visitor_name VARCHAR;
 BEGIN
-    -- Get the full name of the visitor
     SELECT vs.full_name
     INTO visitor_name
     FROM m_visitors_signup vs
@@ -667,7 +806,6 @@ BEGIN
     WHERE u.username = p_username
     LIMIT 1;
 
-    -- Fetch all appointments for this visitor
     SELECT json_agg(
         json_build_object(
             'appointment_id', a.appointment_id,
@@ -679,33 +817,33 @@ BEGIN
             'slot_time', a.slot_time,
             'status', a.status,
             'purpose', a.purpose
-        )
-        ORDER BY a.insert_date DESC
+        ) ORDER BY a.insert_date DESC
     )
     INTO appointment_data
     FROM appointments a
-    JOIN m_organization o ON o.organization_id = a.organization_id
-    JOIN m_department d ON d.department_id = a.department_id
-    JOIN m_officers off ON off.officer_id = a.officer_id
-    JOIN m_services s ON s.service_id = a.service_id
+    LEFT JOIN m_organization o ON o.organization_id = a.organization_id
+    LEFT JOIN m_department d ON d.department_id = a.department_id
+    LEFT JOIN m_officers off ON off.officer_id = a.officer_id
+    LEFT JOIN m_services s ON s.service_id = a.service_id
     JOIN m_visitors_signup vs ON vs.visitor_id = a.visitor_id
     JOIN m_users u ON u.user_id = vs.user_id
     WHERE u.username = p_username;
 
-    -- Notifications based on appointments
     SELECT json_agg(
         json_build_object(
             'message', 
             CASE 
-                WHEN a.status = 'approved' THEN 'Your appointment ' || a.appointment_id || ' has been approved.'
-                WHEN a.status = 'rejected' THEN 'Your appointment ' || a.appointment_id || ' was rejected.'
-                WHEN a.status = 'completed' THEN 'Your appointment ' || a.appointment_id || ' is completed.'
-                ELSE 'Your appointment ' || a.appointment_id || ' is pending.'
+                WHEN a.status = 'pending' THEN 'Your appointment ' || a.appointment_id || ' is pending approval by Officer ' || off.officer_id
+                WHEN a.status = 'approved' THEN 'Your appointment ' || a.appointment_id || ' has been approved by Officer ' || off.officer_id
+                WHEN a.status = 'rejected' THEN 'Your appointment ' || a.appointment_id || ' was rejected by Officer ' || off.officer_id
+                WHEN a.status = 'completed' THEN 'Your appointment ' || a.appointment_id || ' is completed by Officer ' || off.officer_id
+                WHEN a.status = 'cancelled' THEN 'You have cancelled your appointment ' || a.appointment_id
+                WHEN a.status = 'rescheduled' THEN 'Your appointment ' || a.appointment_id || ' has been rescheduled by Officer ' || off.officer_id
+                ELSE 'Your appointment ' || a.appointment_id || ' has an unknown status.'
             END,
             'status', a.status,
             'appointment_id', a.appointment_id
-        )
-        ORDER BY a.insert_date DESC
+        ) ORDER BY a.insert_date DESC
     )
     INTO notification_data
     FROM appointments a
@@ -714,12 +852,13 @@ BEGIN
     WHERE u.username = p_username;
 
     RETURN json_build_object(
-        'full_name', visitor_name,
+        'full_name', COALESCE(visitor_name, ''),
         'appointments', COALESCE(appointment_data, '[]'::json),
         'notifications', COALESCE(notification_data, '[]'::json)
     );
 END;
 $$ LANGUAGE plpgsql;
+
 
 ---- Function_2:
 CREATE OR REPLACE FUNCTION register_officer(
@@ -743,30 +882,30 @@ DECLARE
     v_uid VARCHAR(20);
     v_officer_id VARCHAR(20);
 BEGIN
-    -- 1️⃣ Check for duplicate mobile
+    
     IF EXISTS (SELECT 1 FROM m_officers WHERE mobile_no = p_mobile_no) THEN
         RETURN QUERY SELECT NULL::VARCHAR, NULL::VARCHAR, 'Mobile number already registered';
         RETURN;
     END IF;
 
-    -- 2️⃣ Check for duplicate email
+    
     IF EXISTS (SELECT 1 FROM m_officers WHERE email_id = p_email_id) THEN
         RETURN QUERY SELECT NULL::VARCHAR, NULL::VARCHAR, 'Email already registered';
         RETURN;
     END IF;
 
-    -- 3️⃣ Validate role exists
+    
     IF NOT EXISTS (SELECT 1 FROM m_role WHERE role_code = p_role_code AND is_active = TRUE) THEN
         RETURN QUERY SELECT NULL::VARCHAR, NULL::VARCHAR, 'Invalid or inactive role code';
         RETURN;
     END IF;
 
-    -- 4️⃣ Insert into m_users
+    
     INSERT INTO m_users (username, password_hash, role_code, insert_by)
     VALUES ('temp_' || p_mobile_no, p_password_hash, p_role_code, 'admin')
     RETURNING m_users.user_id INTO v_uid;
 
-    -- 5️⃣ Insert into m_officers
+    
     INSERT INTO m_officers (
         user_id, full_name, mobile_no, email_id,
         designation_code, department_id, organization_id,
@@ -781,12 +920,12 @@ BEGIN
     )
     RETURNING m_officers.officer_id INTO v_officer_id;
 
-    -- 6️⃣ Update username
+    
     UPDATE m_users
     SET username = v_officer_id
     WHERE user_id = v_uid;
 
-    -- 7️⃣ Return success
+    
     RETURN QUERY SELECT v_uid, v_officer_id, 'Officer registered successfully';
 
 EXCEPTION
@@ -839,21 +978,21 @@ INSERT INTO appointments (
     purpose, appointment_date, slot_time, status, reschedule_reason, qr_code_path, insert_by, insert_ip
 )
 VALUES
-('VIS001', 'ORG001', 'DEP001', 'OFF001', 'SRV001',
+('VIS001', 'ORG001', 'DEP001', 'OFF001', 'SER001',
  'Discuss new digital service implementation', '2025-10-12', '10:30', 'approved', NULL, '/qrcodes/apt001.png', 'system', '127.0.0.1'),
 
-('VIS002', 'ORG001', 'DEP001', 'OFF002', 'SRV001',
+('VIS002', 'ORG001', 'DEP001', 'OFF002', 'SER001',
  'Submit official documents for verification', '2025-10-13', '11:15', 'pending', NULL, '/qrcodes/apt002.png', 'system', '127.0.0.1'),
 
-('VIS001', 'ORG001', 'DEP001', 'OFF001', 'SRV001',
+('VIS001', 'ORG001', 'DEP001', 'OFF001', 'SER001',
  'Follow-up on service request', '2025-10-09', '15:00', 'completed', NULL, '/qrcodes/apt003.png', 'system', '127.0.0.1'),
 
-('VIS002', 'ORG001', 'DEP001', 'OFF002', 'SRV001',
+('VIS002', 'ORG001', 'DEP001', 'OFF002', 'SER001',
  'Request clarification on rejected application', '2025-10-08', '09:45', 'rejected', 'Officer unavailable', '/qrcodes/apt004.png', 'system', '127.0.0.1');
 
 SELECT * FROM m_users
 SELECT * FROM m_Visitors_signup
-INSERT INTO notifications (username, title, message, type, is_read)
+INSERT INTO notifications (user_id, title, message, type, is_read)
 VALUES
 ('VIS001', 'Appointment Approved', 'Your appointment APT001 has been approved by Officer OFF001 for 2025-10-12 at 10:30 AM.', 'success', FALSE),
 ('VIS002', 'Appointment Pending', 'Your appointment APT002 is pending approval by Officer OFF002.', 'info', FALSE),
