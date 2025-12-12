@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
@@ -27,9 +28,11 @@ app.use('/api', bookAppointmentRoute);
 app.use('/api', officerRoute);
 
 const servicesRoute = require("./routes/services");
+const helpdeskRoutes = require("./routes/helpdeskRoutes");
 
 app.use("/api/department", require("./routes/departmentRoutes"));
 app.use("/api/services", servicesRoute);
+app.use("/api/helpdesk", helpdeskRoutes);
 
 
 // Health check

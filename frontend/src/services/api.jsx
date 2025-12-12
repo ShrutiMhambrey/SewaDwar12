@@ -67,6 +67,9 @@ export const uploadAppointmentDocuments = (appointmentId, files, uploaded_by, do
 export const getOfficersByLocation = (payload) => 
   safeRequest(api.post("/getOfficersByLocation", payload));
 
+// ================= OFFICER DASHBOARD =================
+export const getOfficerDashboard = (officerId) =>
+  safeRequest(api.get(`/officer/${officerId}/dashboard`));
 
 export const insertServices = (data) =>
   safeRequest(api.post("/services/insert-multiple", data));

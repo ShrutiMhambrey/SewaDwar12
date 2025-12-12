@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const { insertOfficerSignup, loginOfficer,getOfficersByLocation } = require("../controllers/officerController");
+const { insertOfficerSignup, loginOfficer, getOfficersByLocation, getOfficerDashboard, updateAppointmentStatus, rescheduleAppointment, getAppointmentsByDate, getOfficerReports } = require("../controllers/officerController");
 const pool = require("../db"); // import your PostgreSQL pool
 
 // Store uploaded photos in 'uploads/' folder
@@ -14,6 +14,19 @@ router.post("/getOfficersByLocation", getOfficersByLocation);
 
 // Login route for any role
 router.post("/users_login", loginOfficer);
+
+// Officer Dashboard route
+router.get("/officer/:officer_id/dashboard", getOfficerDashboard);
+
+// Appointment action routes
+router.post("/appointment/update-status", updateAppointmentStatus);
+router.post("/appointment/reschedule", rescheduleAppointment);
+
+// Get appointments by date for reports
+router.get("/officer/:officer_id/appointments-by-date", getAppointmentsByDate);
+
+// Get officer reports
+router.get("/officer/:officer_id/reports", getOfficerReports);
 
 router.get("/roles", async (req, res) => {
   try {

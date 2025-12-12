@@ -117,6 +117,14 @@ export default function LoginEntry() {
                 Visitor
                 <span className="role-desc">Citizen / Visitor Login</span>
               </button>
+
+              <button
+                className="role-btn"
+                onClick={() => openRole("helpdeslogin")}
+              >
+                Helpdesk
+                <span className="role-desc">Helpdesk Support Login</span>
+              </button>
             </div>
 
             <div className="role-actions">

@@ -321,11 +321,23 @@ exports.loginOfficer = async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid password" });
     }
 
+    // Get officer_id from m_officers table if role is Officer
+    let officerId = null;
+    if (officer.out_role_code === 'OF') {
+      const officerResult = await pool.query(
+        "SELECT officer_id FROM m_officers WHERE user_id = $1",
+        [officer.out_user_id]
+      );
+      if (officerResult.rows.length > 0) {
+        officerId = officerResult.rows[0].officer_id;
+      }
+    }
+
     res.status(200).json({
       success: true,
       message: "Login successful",
       user_id: officer.out_user_id,
-      officer_id: officer.out_officer_id,
+      officer_id: officerId || officer.out_username, // Use username as fallback
       username: officer.out_username,
       role: officer.out_role_code,
     });
@@ -416,6 +428,537 @@ exports.getOfficersByLocation = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error while fetching officers",
+      error: error.message,
+    });
+  }
+};
+
+// Get Officer Dashboard Data
+exports.getOfficerDashboard = async (req, res) => {
+  try {
+    const { officer_id } = req.params;
+
+    if (!officer_id) {
+      return res.status(400).json({ success: false, message: "Officer ID is required" });
+    }
+
+    // Get today's appointments count (use CURRENT_DATE for consistent timezone)
+    const todayResult = await pool.query(
+      `SELECT COUNT(*) as count FROM appointments 
+       WHERE officer_id = $1 AND DATE(appointment_date) = CURRENT_DATE AND is_active = TRUE`,
+      [officer_id]
+    );
+
+    // Get pending appointments count
+    const pendingResult = await pool.query(
+      `SELECT COUNT(*) as count FROM appointments 
+       WHERE officer_id = $1 AND status = 'pending' AND is_active = TRUE`,
+      [officer_id]
+    );
+
+    // Get completed appointments count
+    const completedResult = await pool.query(
+      `SELECT COUNT(*) as count FROM appointments 
+       WHERE officer_id = $1 AND status = 'completed' AND is_active = TRUE`,
+      [officer_id]
+    );
+
+    // Get rescheduled appointments count
+    const rescheduledResult = await pool.query(
+      `SELECT COUNT(*) as count FROM appointments 
+       WHERE officer_id = $1 AND status = 'rescheduled' AND is_active = TRUE`,
+      [officer_id]
+    );
+
+    // Get walk-ins count for today
+    const walkinsResult = await pool.query(
+      `SELECT COUNT(*) as count FROM walkins 
+       WHERE officer_id = $1 AND (DATE(walkin_date) = CURRENT_DATE OR DATE(appointment_date) = CURRENT_DATE)`,
+      [officer_id]
+    );
+
+    // Get walk-in appointments for this officer
+    const walkinAppointmentsResult = await pool.query(
+      `SELECT w.walkin_id as appointment_id, w.full_name as visitor_name, w.mobile_no as visitor_mobile, 
+              w.email_id as visitor_email, w.purpose, w.status, 
+              COALESCE(w.appointment_date, w.walkin_date) as appointment_date, 
+              w.time_slot as slot_time, w.id_proof_no as aadhar_number,
+              d.department_name, o.organization_name, w.booked_by
+       FROM walkins w
+       LEFT JOIN m_department d ON w.department_id = d.department_id
+       LEFT JOIN m_organization o ON w.organization_id = o.organization_id
+       WHERE w.officer_id = $1 AND DATE(COALESCE(w.appointment_date, w.walkin_date)) >= CURRENT_DATE
+       ORDER BY COALESCE(w.appointment_date, w.walkin_date) ASC, w.time_slot ASC
+       LIMIT 20`,
+      [officer_id]
+    );
+
+    // Get TODAY's appointments (all statuses)
+    const todayAppointmentsResult = await pool.query(
+      `SELECT a.appointment_id, a.visitor_id, a.purpose, a.status, a.appointment_date, a.slot_time,
+              v.full_name as visitor_name, v.mobile_no as visitor_mobile, v.email_id as visitor_email,
+              s.service_name, d.department_name, o.organization_name
+       FROM appointments a
+       LEFT JOIN m_visitors_signup v ON a.visitor_id = v.visitor_id
+       LEFT JOIN m_services s ON a.service_id = s.service_id
+       LEFT JOIN m_department d ON a.department_id = d.department_id
+       LEFT JOIN m_organization o ON a.organization_id = o.organization_id
+       WHERE a.officer_id = $1 AND a.is_active = TRUE 
+         AND DATE(a.appointment_date) = CURRENT_DATE
+       ORDER BY a.slot_time ASC`,
+      [officer_id]
+    );
+
+    // Get PENDING appointments (all dates)
+    const pendingAppointmentsResult = await pool.query(
+      `SELECT a.appointment_id, a.visitor_id, a.purpose, a.status, a.appointment_date, a.slot_time,
+              v.full_name as visitor_name, v.mobile_no as visitor_mobile, v.email_id as visitor_email,
+              s.service_name, d.department_name, o.organization_name
+       FROM appointments a
+       LEFT JOIN m_visitors_signup v ON a.visitor_id = v.visitor_id
+       LEFT JOIN m_services s ON a.service_id = s.service_id
+       LEFT JOIN m_department d ON a.department_id = d.department_id
+       LEFT JOIN m_organization o ON a.organization_id = o.organization_id
+       WHERE a.officer_id = $1 AND a.is_active = TRUE 
+         AND a.status = 'pending'
+       ORDER BY a.appointment_date ASC, a.slot_time ASC
+       LIMIT 20`,
+      [officer_id]
+    );
+
+    // Get RESCHEDULED appointments
+    const rescheduledAppointmentsResult = await pool.query(
+      `SELECT a.appointment_id, a.visitor_id, a.purpose, a.status, a.appointment_date, a.slot_time,
+              a.reschedule_reason,
+              v.full_name as visitor_name, v.mobile_no as visitor_mobile, v.email_id as visitor_email,
+              s.service_name, d.department_name, o.organization_name
+       FROM appointments a
+       LEFT JOIN m_visitors_signup v ON a.visitor_id = v.visitor_id
+       LEFT JOIN m_services s ON a.service_id = s.service_id
+       LEFT JOIN m_department d ON a.department_id = d.department_id
+       LEFT JOIN m_organization o ON a.organization_id = o.organization_id
+       WHERE a.officer_id = $1 AND a.is_active = TRUE 
+         AND a.status = 'rescheduled'
+       ORDER BY a.appointment_date ASC, a.slot_time ASC
+       LIMIT 20`,
+      [officer_id]
+    );
+
+    // Get upcoming appointments (today and future, not completed)
+    const upcomingResult = await pool.query(
+      `SELECT a.appointment_id, a.purpose, a.status, a.appointment_date, a.slot_time,
+              v.full_name as visitor_name, v.mobile_no as visitor_mobile
+       FROM appointments a
+       LEFT JOIN m_visitors_signup v ON a.visitor_id = v.visitor_id
+       WHERE a.officer_id = $1 AND a.is_active = TRUE 
+         AND DATE(a.appointment_date) >= CURRENT_DATE
+         AND a.status NOT IN ('completed', 'rejected')
+       ORDER BY a.appointment_date ASC, a.slot_time ASC
+       LIMIT 10`,
+      [officer_id]
+    );
+
+    // Get recent activity/notifications (recent status changes)
+    const recentResult = await pool.query(
+      `SELECT a.appointment_id, a.purpose, a.status, a.appointment_date, a.slot_time,
+              v.full_name as visitor_name, a.updated_date, a.insert_date
+       FROM appointments a
+       LEFT JOIN m_visitors_signup v ON a.visitor_id = v.visitor_id
+       WHERE a.officer_id = $1 AND a.is_active = TRUE
+       ORDER BY COALESCE(a.updated_date, a.insert_date) DESC
+       LIMIT 5`,
+      [officer_id]
+    );
+
+    // Get COMPLETED appointments
+    const completedAppointmentsResult = await pool.query(
+      `SELECT a.appointment_id, a.visitor_id, a.purpose, a.status, a.appointment_date, a.slot_time,
+              v.full_name as visitor_name, v.mobile_no as visitor_mobile, v.email_id as visitor_email,
+              s.service_name, d.department_name, o.organization_name, a.updated_date as completed_date
+       FROM appointments a
+       LEFT JOIN m_visitors_signup v ON a.visitor_id = v.visitor_id
+       LEFT JOIN m_services s ON a.service_id = s.service_id
+       LEFT JOIN m_department d ON a.department_id = d.department_id
+       LEFT JOIN m_organization o ON a.organization_id = o.organization_id
+       WHERE a.officer_id = $1 AND a.is_active = TRUE 
+         AND a.status = 'completed'
+       ORDER BY a.updated_date DESC, a.appointment_date DESC
+       LIMIT 20`,
+      [officer_id]
+    );
+
+    // Get officer details
+    const officerResult = await pool.query(
+      `SELECT full_name, designation_code, department_id FROM m_officers WHERE officer_id = $1`,
+      [officer_id]
+    );
+
+    const officerInfo = officerResult.rows[0] || {};
+    const fullName = officerInfo.full_name || "Officer";
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        full_name: fullName,
+        designation: officerInfo.designation_code || "",
+        stats: {
+          today: parseInt(todayResult.rows[0].count) || 0,
+          pending: parseInt(pendingResult.rows[0].count) || 0,
+          completed: parseInt(completedResult.rows[0].count) || 0,
+          rescheduled: parseInt(rescheduledResult.rows[0].count) || 0,
+          walkins: parseInt(walkinsResult.rows[0].count) || 0,
+        },
+        today_appointments: todayAppointmentsResult.rows,
+        pending_appointments: pendingAppointmentsResult.rows,
+        rescheduled_appointments: rescheduledAppointmentsResult.rows,
+        completed_appointments: completedAppointmentsResult.rows,
+        walkin_appointments: walkinAppointmentsResult.rows,
+        upcoming_appointments: upcomingResult.rows,
+        recent_activity: recentResult.rows,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error fetching officer dashboard:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching dashboard",
+      error: error.message,
+    });
+  }
+};
+
+// Update appointment status (approve, reject, complete)
+exports.updateAppointmentStatus = async (req, res) => {
+  try {
+    const { appointment_id, status, officer_id, reason } = req.body;
+
+    if (!appointment_id || !status || !officer_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment ID, status, and officer ID are required",
+      });
+    }
+
+    const validStatuses = ['approved', 'rejected', 'completed', 'pending'];
+    if (!validStatuses.includes(status.toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status. Must be: approved, rejected, completed, or pending",
+      });
+    }
+
+    // Verify the appointment belongs to this officer
+    const verifyResult = await pool.query(
+      `SELECT appointment_id FROM appointments WHERE appointment_id = $1 AND officer_id = $2`,
+      [appointment_id, officer_id]
+    );
+
+    if (verifyResult.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: "Appointment not found or does not belong to this officer",
+      });
+    }
+
+    // Update the status
+    const updateResult = await pool.query(
+      `UPDATE appointments 
+       SET status = $1, updated_date = NOW(), update_by = $2, reschedule_reason = $3
+       WHERE appointment_id = $4
+       RETURNING *`,
+      [status.toLowerCase(), officer_id, reason || null, appointment_id]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `Appointment ${status.toLowerCase()} successfully`,
+      data: updateResult.rows[0],
+    });
+
+  } catch (error) {
+    console.error("❌ Error updating appointment status:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating appointment",
+      error: error.message,
+    });
+  }
+};
+
+// Reschedule appointment
+exports.rescheduleAppointment = async (req, res) => {
+  try {
+    const { appointment_id, officer_id, new_date, new_time, reason } = req.body;
+
+    if (!appointment_id || !officer_id || !new_date || !new_time) {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment ID, officer ID, new date, and new time are required",
+      });
+    }
+
+    // Verify the appointment belongs to this officer
+    const verifyResult = await pool.query(
+      `SELECT appointment_id FROM appointments WHERE appointment_id = $1 AND officer_id = $2`,
+      [appointment_id, officer_id]
+    );
+
+    if (verifyResult.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: "Appointment not found or does not belong to this officer",
+      });
+    }
+
+    // Update the appointment with new date/time and set status to rescheduled
+    const updateResult = await pool.query(
+      `UPDATE appointments 
+       SET appointment_date = $1, slot_time = $2, status = 'rescheduled', 
+           reschedule_reason = $3, updated_date = NOW(), update_by = $4
+       WHERE appointment_id = $5
+       RETURNING *`,
+      [new_date, new_time, reason || 'Rescheduled by officer', officer_id, appointment_id]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Appointment rescheduled successfully",
+      data: updateResult.rows[0],
+    });
+
+  } catch (error) {
+    console.error("❌ Error rescheduling appointment:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while rescheduling appointment",
+      error: error.message,
+    });
+  }
+};
+
+// Get appointments by specific date for reports/downloads
+exports.getAppointmentsByDate = async (req, res) => {
+  try {
+    const { officer_id } = req.params;
+    const { date } = req.query;
+
+    if (!officer_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Officer ID is required",
+      });
+    }
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: "Date is required",
+      });
+    }
+
+    // Get appointments for the specified date
+    const appointmentsResult = await pool.query(
+      `SELECT 
+        a.appointment_id,
+        a.appointment_date,
+        a.slot_time,
+        a.status,
+        a.purpose,
+        a.reschedule_reason,
+        v.full_name as visitor_name,
+        v.mobile_no as visitor_mobile,
+        v.email_id as visitor_email,
+        d.department_name,
+        s.service_name
+      FROM appointments a
+      LEFT JOIN m_visitors_signup v ON a.visitor_id = v.visitor_id
+      LEFT JOIN m_department d ON a.department_id = d.department_id
+      LEFT JOIN m_services s ON a.service_id = s.service_id
+      WHERE a.officer_id = $1 AND DATE(a.appointment_date) = $2
+      ORDER BY a.slot_time ASC`,
+      [officer_id, date]
+    );
+
+    // Get summary stats for the date
+    const statsResult = await pool.query(
+      `SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'pending') as pending,
+        COUNT(*) FILTER (WHERE status = 'approved') as approved,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed,
+        COUNT(*) FILTER (WHERE status = 'rejected') as rejected,
+        COUNT(*) FILTER (WHERE status = 'rescheduled') as rescheduled
+      FROM appointments
+      WHERE officer_id = $1 AND DATE(appointment_date) = $2`,
+      [officer_id, date]
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        date: date,
+        appointments: appointmentsResult.rows,
+        stats: statsResult.rows[0],
+      },
+    });
+
+  } catch (error) {
+    console.error("❌ Error fetching appointments by date:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching appointments",
+      error: error.message,
+    });
+  }
+};
+
+// Get report data for officer
+exports.getOfficerReports = async (req, res) => {
+  try {
+    const { officer_id } = req.params;
+    const { type, month, start, end } = req.query;
+
+    if (!officer_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Officer ID is required",
+      });
+    }
+
+    // Get officer name
+    const officerResult = await pool.query(
+      `SELECT full_name FROM m_officers WHERE officer_id = $1`,
+      [officer_id]
+    );
+    const officerName = officerResult.rows[0]?.full_name || "Officer";
+
+    let startDate, endDate;
+    
+    if (type === "monthly" && month) {
+      // Monthly report
+      startDate = `${month}-01`;
+      const nextMonth = new Date(month + "-01");
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      endDate = nextMonth.toISOString().split('T')[0];
+    } else if (type === "weekly") {
+      // Weekly report (last 7 days)
+      const today = new Date();
+      const weekAgo = new Date(today);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      startDate = weekAgo.toISOString().split('T')[0];
+      endDate = today.toISOString().split('T')[0];
+    } else if (type === "custom" && start && end) {
+      startDate = start;
+      endDate = end;
+    } else {
+      // Default: current month
+      const today = new Date();
+      startDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+      endDate = today.toISOString().split('T')[0];
+    }
+
+    // Get summary stats
+    const summaryResult = await pool.query(
+      `SELECT 
+        COUNT(*) as total_appointments,
+        COUNT(*) FILTER (WHERE status = 'pending') as pending,
+        COUNT(*) FILTER (WHERE status = 'approved') as approved,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed,
+        COUNT(*) FILTER (WHERE status = 'rejected') as rejected,
+        COUNT(*) FILTER (WHERE status = 'rescheduled') as rescheduled
+      FROM appointments
+      WHERE officer_id = $1 AND DATE(appointment_date) >= $2 AND DATE(appointment_date) <= $3`,
+      [officer_id, startDate, endDate]
+    );
+
+    const summary = summaryResult.rows[0];
+    const total = parseInt(summary.total_appointments) || 1;
+    const days = Math.max(1, Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)));
+
+    // Get daily breakdown
+    const dailyResult = await pool.query(
+      `SELECT 
+        DATE(appointment_date) as date,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed,
+        COUNT(*) FILTER (WHERE status = 'approved') as approved,
+        COUNT(*) FILTER (WHERE status = 'pending') as pending,
+        COUNT(*) FILTER (WHERE status = 'rejected') as rejected,
+        COUNT(*) FILTER (WHERE status = 'rescheduled') as rescheduled
+      FROM appointments
+      WHERE officer_id = $1 AND DATE(appointment_date) >= $2 AND DATE(appointment_date) <= $3
+      GROUP BY DATE(appointment_date)
+      ORDER BY DATE(appointment_date)`,
+      [officer_id, startDate, endDate]
+    );
+
+    // Format daily data
+    const dailyBreakdown = dailyResult.rows.map(row => ({
+      date: new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+      fullDate: row.date,
+      completed: parseInt(row.completed) || 0,
+      approved: parseInt(row.approved) || 0,
+      pending: parseInt(row.pending) || 0,
+      rejected: parseInt(row.rejected) || 0,
+      rescheduled: parseInt(row.rescheduled) || 0,
+    }));
+
+    // Get peak day
+    const peakDay = dailyBreakdown.reduce((max, day) => {
+      const dayTotal = day.completed + day.approved + day.pending + day.rejected + day.rescheduled;
+      return dayTotal > max.total ? { date: day.date, total: dayTotal } : max;
+    }, { date: '', total: 0 });
+
+    // Get hourly distribution
+    const hourlyResult = await pool.query(
+      `SELECT 
+        EXTRACT(HOUR FROM slot_time::time) as hour,
+        COUNT(*) as appointments
+      FROM appointments
+      WHERE officer_id = $1 AND DATE(appointment_date) >= $2 AND DATE(appointment_date) <= $3
+      GROUP BY EXTRACT(HOUR FROM slot_time::time)
+      ORDER BY hour`,
+      [officer_id, startDate, endDate]
+    );
+
+    const hourlyDistribution = hourlyResult.rows.map(row => ({
+      hour: `${row.hour > 12 ? row.hour - 12 : row.hour} ${row.hour >= 12 ? 'PM' : 'AM'}`,
+      appointments: parseInt(row.appointments) || 0,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        officer_name: officerName,
+        period: `${startDate} to ${endDate}`,
+        summary: {
+          total_appointments: parseInt(summary.total_appointments) || 0,
+          completed: parseInt(summary.completed) || 0,
+          approved: parseInt(summary.approved) || 0,
+          pending: parseInt(summary.pending) || 0,
+          rejected: parseInt(summary.rejected) || 0,
+          rescheduled: parseInt(summary.rescheduled) || 0,
+          completion_rate: ((parseInt(summary.completed) / total) * 100).toFixed(1),
+          approval_rate: (((parseInt(summary.completed) + parseInt(summary.approved)) / total) * 100).toFixed(1),
+          avg_daily: (total / days).toFixed(1),
+          peak_day: peakDay,
+        },
+        daily_breakdown: dailyBreakdown,
+        status_distribution: [
+          { name: 'Completed', value: parseInt(summary.completed) || 0, color: '#10b981' },
+          { name: 'Approved', value: parseInt(summary.approved) || 0, color: '#3b82f6' },
+          { name: 'Pending', value: parseInt(summary.pending) || 0, color: '#f59e0b' },
+          { name: 'Rejected', value: parseInt(summary.rejected) || 0, color: '#ef4444' },
+          { name: 'Rescheduled', value: parseInt(summary.rescheduled) || 0, color: '#8b5cf6' },
+        ],
+        hourly_distribution: hourlyDistribution,
+      },
+    });
+
+  } catch (error) {
+    console.error("❌ Error fetching officer reports:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching reports",
       error: error.message,
     });
   }

@@ -41,11 +41,23 @@ export default function OfficerLogin() {
 };
 
 
-    const { data } = await officerLogin(payload);
+    const { data, error } = await officerLogin(payload);
+    
+    console.log("Login response:", { data, error });
 
-    // const row = data[0]; // first row of returned table
+    // Check if there was an error or no data
+    if (error || !data) {
+      console.log("Login error or no data:", error);
+      toast.error("Login failed. Please check your credentials.");
+      if (boxRef.current) {
+        boxRef.current.classList.add("shake");
+        setTimeout(() => boxRef.current.classList.remove("shake"), 300);
+      }
+      return;
+    }
 
     if (!data.success) {
+          console.log("Login not successful:", data);
           toast.error(data.message || "Invalid credentials");
     
           if (boxRef.current) {

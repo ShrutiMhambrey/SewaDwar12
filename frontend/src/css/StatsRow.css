@@ -1,0 +1,90 @@
+/* ===== Stats Row ===== */
+.stats-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.stat-circle {
+  flex: 1;
+  min-width: 150px;
+  max-width: 200px;
+  background: white;
+  border-radius: 16px;
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.stat-circle:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.stat-circle.active {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.stat-circle.today {
+  border-left: 4px solid #3b82f6;
+}
+
+.stat-circle.completed {
+  border-left: 4px solid #10b981;
+}
+
+.stat-circle.pending {
+  border-left: 4px solid #f59e0b;
+}
+
+.stat-circle.rescheduled {
+  border-left: 4px solid #6366f1;
+}
+
+.stat-circle.reassigned {
+  border-left: 4px solid #8b5cf6;
+}
+
+.stat-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.stat-number {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stats-row {
+    gap: 12px;
+  }
+  
+  .stat-circle {
+    min-width: 120px;
+    padding: 16px 12px;
+  }
+  
+  .stat-number {
+    font-size: 1.6rem;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+  }
+}

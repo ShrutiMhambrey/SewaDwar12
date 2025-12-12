@@ -24,12 +24,27 @@ const getTokenData = () => {
   }
 };
 
+// Helper: check officer login (stored directly in localStorage)
+const getOfficerData = () => {
+  const officerId = localStorage.getItem("officer_id");
+  if (!officerId) return null;
+  return {
+    officer_id: officerId,
+    role_code: localStorage.getItem("role_code") || "OF",
+    full_name: localStorage.getItem("username") || "Officer",
+  };
+};
+
 const NavbarMain = () => {
   const navigate = useNavigate();
   const tokenData = useMemo(() => getTokenData(), []);
-  const isLoggedIn = !!tokenData;
-  const roleCode = tokenData?.role_code;
-  const name = tokenData?.full_name || '';
+  const officerData = useMemo(() => getOfficerData(), []);
+  
+  // User is logged in if either token or officer session exists
+  const isLoggedIn = !!tokenData || !!officerData;
+  const roleCode = tokenData?.role_code || officerData?.role_code;
+  const name = tokenData?.full_name || officerData?.full_name || '';
+  const isOfficer = !!officerData;
 
   const firstName = name ? name.split(' ')[0] : '';
 
@@ -40,7 +55,12 @@ const NavbarMain = () => {
   const handleMenuClose = () => setAnchorEl(null);
 
   const handleLogout = () => {
+    // Clear all auth data
     localStorage.removeItem("token");
+    localStorage.removeItem("officer_id");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("role_code");
+    localStorage.removeItem("username");
     handleMenuClose();
     navigate("/login");
   };
@@ -55,7 +75,7 @@ const NavbarMain = () => {
         </Link>
         <ul className="nav-links">
           <li><Link to="/">Home</Link></li>
-          <li><Link to="/dashboard">Dashboard</Link></li>
+          {isOfficer && <li><Link to="/dashboard">Dashboard</Link></li>}
           
 
           {isLoggedIn && (roleCode === "AD" || roleCode === "SA") && (

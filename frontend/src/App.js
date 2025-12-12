@@ -41,11 +41,19 @@ import Dashboard1 from "./pages/admin";
 import TodayAppointments from "./pages/TodayAppointments";
 import AppointmentAction from "./pages/AppointmentAction";
 import History from "./pages/History";
+import OfficerNotifications from "./pages/OfficerNotifications";
+import OfficerReports from "./pages/OfficerReports";
 
 import AddTypeEntry from "./Components/AddTypeEntry";
 import AddOrganization from "./pages/AddOrganization";
 import AddDepartment from "./pages/AddDepartment";
 import AddServices from "./pages/AddServices";
+import OfficerProtectedRoute from "./Components/OfficerProtectedRoute";
+
+// Helpdesk
+import HelpdeskLogin from "./Components/HelpdeskLogin";
+import HelpdeskDashboard from "./pages/HelpdeskDashboard";
+import HelpdeskProtectedRoute from "./Components/HelpdeskProtectedRoute";
 
 function App() {
   const loggedIn = !!localStorage.getItem("token");
@@ -63,6 +71,7 @@ function App() {
     { path: "change-password", element: <ChangePassword /> },
     { path: "admindash", element: <AdminDashboard /> },
     { path: "approval", element: <ApprovalList /> },
+    { path: "officer/dashboard", element: <Dashboard /> },
   ];
 
   return (
@@ -73,13 +82,16 @@ function App() {
         <Route path="/login/visitorlogin" element={<Login />} />
         <Route path="/register-officer" element={<OfficerForm />} />
         <Route path="/login" element={<LoginEntry />} />
-        
+
         {/* Officer login */}
         <Route path="/login/officerlogin" element={<OfficerLogin />} />
 
         {/* Admin login */}
         <Route path="/login/adminlogin" element={<AdminLogin />} />
-        
+
+        {/* Helpdesk login */}
+        <Route path="/login/helpdeslogin" element={<HelpdeskLogin />} />
+
         {/* Forgot Password Flow */}
         <Route path="/forgot" element={<ForgotPassword />} />
         <Route path="/reset" element={<ResetPassword />} />
@@ -104,13 +116,17 @@ function App() {
         <Route path="/add/organization" element={<AddOrganization />} />
         <Route path="/add/department" element={<AddDepartment />} />
         <Route path="/add/services" element={<AddServices />} />
-        
-        {/* Officer Routes */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/officer/today" element={<TodayAppointments />} />
-        <Route path="/officer/action/:id" element={<AppointmentAction />} />
-        <Route path="/officer/notifications" element={<Notifications />} />
-        <Route path="/officer/history" element={<History />} />
+
+        {/* Officer Routes - Protected */}
+        <Route path="/dashboard" element={<OfficerProtectedRoute><Dashboard /></OfficerProtectedRoute>} />
+        <Route path="/officer/today" element={<OfficerProtectedRoute><TodayAppointments /></OfficerProtectedRoute>} />
+        <Route path="/officer/action/:id" element={<OfficerProtectedRoute><AppointmentAction /></OfficerProtectedRoute>} />
+        <Route path="/officer/notifications" element={<OfficerProtectedRoute><OfficerNotifications /></OfficerProtectedRoute>} />
+        <Route path="/officer/history" element={<OfficerProtectedRoute><History /></OfficerProtectedRoute>} />
+        <Route path="/officer/reports" element={<OfficerProtectedRoute><OfficerReports /></OfficerProtectedRoute>} />
+
+        {/* Helpdesk Routes - Protected */}
+        <Route path="/helpdesk/dashboard" element={<HelpdeskProtectedRoute><HelpdeskDashboard /></HelpdeskProtectedRoute>} />
 
         {/* Main Layout */}
         <Route path="/" element={<MainPage />}>
